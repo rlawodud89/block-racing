@@ -305,48 +305,97 @@ UpdateTick
 
 ## 5. Block / Attack System
 
-플레이어가 블록을 배치하거나 Line Clear를 수행하면 상대방에게 공격 블록을 전달할 수 있습니다.
+플레이어가 Shoot 입력을 통해 자신의 블록을 전방으로 발사하거나, 상대방 Lane에 공격 블록을 생성할 수 있습니다.
 
-공격 블록은 `FlyingBlock`으로 표현되며 상대방 Lane을 향해 이동합니다.
+### 수비 블록 생성
+
+플레이어가 수비 모드인 상태에서 Shoot 입력을 하면 소유하고 있는 BlockPiece를 FlyingBlock으로 생성하여 자신의 Lane 전방으로 이동시킵니다.
 
 ```text
-Player A
+Shoot
+  │
+  ▼
+BlockPiece
+  │
+  ▼
+FlyingBlock
+  │
+  ├── 다른 블록과 충돌
+  │      ↓
+  │   Grid에 고정
+  │
+  ├── 이동 후 Line Clear
+  │      ↓
+  │    제거
+  │
+  └── Lane 최상단 도달
+         ↓
+      Grid에 고정
+```
+FlyingBlock은 Lane.Grid에 반영되기 전까지 별도의 리스트에서 관리되며, 
+Tick마다 위치를 갱신하고 다음 위치의 충돌 여부를 검사합니다.
+
+충돌이 발생하면 이동 전 위치에 블록을 고정하고 FlyingBlock을 제거합니다.
+
+### 공격 처리
+
+플레이어가 공격 모드인 상태에서 Shoot 입력을 하면 상대방 Lane에 생성할 공격 정보를 AttackPiece로 만들어 PendingAttacks Queue에 등록합니다.
+
+```text
+ Shoot
    │
-   │ Line Clear
    ▼
-Attack Piece
+AttackPiece 생성
+   │
+   ├── Block Shape
+   ├── Spawn Tick
+   └── X Position
    │
    ▼
-Flying Block
-   │
+상대 Lane PendingAttacks
    │
    ▼
-Player B Lane
+SpawnTick 도달
+   │
+   ▼
+AttackSystem
+   │
+   ▼
+상대 Lane 최상단에 생성
 ```
 
-FlyingBlock은 착지하기 전까지 `Lane.Grid`에 직접 반영되지 않으며 별도의 리스트에서 관리합니다.
+생성 위치에 이미 다른 블록이 존재하는 경우 해당 AttackPiece는 Queue에 유지하고, 다음 Tick에 다시 생성 가능 여부를 확인합니다.
 
 ---
 
 ## 6. Collision System
 
-Server에서 블록과 차량의 충돌을 판정합니다.
+`CollisionSystem`은 Lane의 `Grid`에 배치된 블록과 Player의 `Car` 간 충돌을 판정합니다.
 
-특히 FlyingBlock의 이동 속도와 Server Tick 사이에서 발생할 수 있는 충돌 누락 문제를 해결하기 위해 **다음 위치에서 충돌이 발생하는지 먼저 검사한 후 이동**하도록 수정했습니다.
+### 충돌 흐름
 
 ```text
-현재 위치
-    │
-    │ 다음 위치 충돌 검사
-    ▼
-Collision ?
- ┌──┴──┐
-Yes    No
- │      │
-착지   이동
+Tick
+ │
+ ▼
+Player Car 위치 확인
+ │
+ ▼
+Lane.Grid 검사
+ │
+ ├── Block 없음
+ │
+ └── Block 발견
+       │
+       ▼
+  Car.OnCollision()
+       │
+       ├── Stun 적용
+       ├── 이동 속도 감소
+       └── 무적 상태 적용
 ```
 
-이를 통해 FlyingBlock이 빠르게 이동하면서 충돌 지점을 건너뛰는 문제를 방지했습니다.
+충돌 이후 Stun 및 무적 상태의 지속 시간은 Tick을 기준으로 관리하며, 상태 종료 처리는 `Car`에서 담당합니다.
 
 ---
 
@@ -354,9 +403,7 @@ Yes    No
 
 Lane의 Grid를 기반으로 완성된 줄을 검사하고 제거합니다.
 
-FlyingBlock은 착지하기 전까지 Grid에 존재하지 않기 때문에, FlyingBlock의 착지 과정과 Line Clear 처리 순서를 고려하여 게임 상태를 갱신하도록 구현했습니다.
-
-또한 현재 게임 규칙에서는 Line Clear 이후 남은 블록을 아래로 떨어뜨려 빈 공간을 채우는 방식이 아니라, **제거된 줄의 위치를 그대로 비워두는 방식**을 사용합니다.
+현재 게임 규칙에서는 Line Clear 이후 남은 블록을 아래로 떨어뜨려 빈 공간을 채우는 방식이 아니라, **제거된 줄의 위치를 그대로 비워두는 방식**을 사용합니다.
 
 ---
 
@@ -365,24 +412,6 @@ FlyingBlock은 착지하기 전까지 Grid에 존재하지 않기 때문에, Fly
 시간의 흐름에 따라 Lane이 Scroll되며 플레이어의 레이싱 진행 상황에 영향을 줍니다.
 
 차량의 Speed와 게임 진행 상태를 고려하여 Scroll 속도를 조정하는 방향으로 구현하고 있습니다.
-
----
-
-## 9. Stun System
-
-차량이 Grid의 블록과 충돌하면 일정 시간 동안 Stun 상태가 적용됩니다.
-
-Stun 상태에서는 차량의 이동 속도가 감소하며 Client에서는 해당 상태를 시각적으로 표현합니다.
-
-```text
-Normal
-  ↓
-Collision
-  ↓
-Stunned
-  ↓
-Recovery
-```
 
 ---
 
