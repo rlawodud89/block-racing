@@ -42,16 +42,16 @@ Common은 별도의 Repository로 관리되며, 현재는 **Git Submodule로 Cli
                     │ Enums / Shared Types │
                     └───────┬───────┬──────┘
                             │       │
-                         포함│       │포함
+                        포함│       │포함
                             │       │
               ┌─────────────▼─┐   ┌─▼────────────────┐
-              │ Unity Client   │   │ Dedicated Server │
-              │                │   │                  │
+              │ Unity Client  │   │ Dedicated Server │
+              │               │   │                  │
               │ Input         │   │ Session          │
               │ Rendering     │   │ MatchMaker       │
               │ UI / Scene    │   │ RoomManager      │
-              └───────┬────────┘   │ GameSimulation   │
-                      │            └────────┬─────────┘
+              └───────┬───────┘   │ GameSimulation   │
+                      │           └────────┬─────────┘
                       │                     │
                       └──────── TCP ────────┘
 ```
