@@ -10,7 +10,7 @@
 
 ## 🎮 Overview
 
-**Block Racing**은 두 플레이어가 각각 자신의 Lane에서 블록을 쌓으며 경쟁하는 2인 온라인 멀티플레이 게임입니다.
+**블록 레이싱**은 두 플레이어가 각각 자신의 Lane에서 블록을 쌓으며 경쟁하는 2인 온라인 멀티플레이 게임입니다.
 
 일반적인 블록 퍼즐 게임의 요소에 **상대방에게 블록을 보내는 공격 시스템**과 **차량의 이동 및 레이싱 요소**를 결합했습니다.
 
@@ -29,41 +29,31 @@
 
 ## 🏗️ Project Architecture
 
-프로젝트는 **Client / Server / Common(Submodule)** 구조로 구성되어 있습니다.
+프로젝트는 **Client / Server / Common(Shared Module)** 구조로 구성되어 있습니다.
 
 Common은 별도의 Repository로 관리되며, 현재는 **Git Submodule로 Client와 Server에 포함되어 공유**됩니다.
 
 ```text
                     ┌──────────────────────┐
-                    │    Unity Client      │
+                    │       Common         │
+                    │    Git Submodule     │
                     │                      │
-                    │  Input / Rendering   │
-                    │  UI / Scene          │
-                    └──────────┬───────────┘
-                               │
-                               │ TCP
-                               │
-                    ┌──────────▼───────────┐
-                    │   Dedicated Server   │
-                    │                      │
-                    │  Session             │
-                    │  MatchMaker          │
-                    │  RoomManager         │
-                    │  GameSimulation      │
-                    │                      │
-                    │  Attack / Collision  │
-                    │  LineClear / Scroll  │
-                    └──────────┬───────────┘
-                               │
-                    ┌──────────▼───────────┐
-                    │  Common              │
-                    │  (Git Submodule)     │
-                    │                      │
-                    │  Packets             │
-                    │  Snapshots           │
-                    │  Enums               │
-                    │  Shared Types        │
-                    └──────────────────────┘
+                    │ Packets / Snapshots  │
+                    │ Enums / Shared Types │
+                    └───────┬───────┬──────┘
+                            │       │
+                         포함│       │포함
+                            │       │
+              ┌─────────────▼─┐   ┌─▼────────────────┐
+              │ Unity Client   │   │ Dedicated Server │
+              │                │   │                  │
+              │ Input         │   │ Session          │
+              │ Rendering     │   │ MatchMaker       │
+              │ UI / Scene    │   │ RoomManager      │
+              └───────┬────────┘   │ GameSimulation   │
+                      │            └────────┬─────────┘
+                      │                     │
+                      └──────── TCP ────────┘
 ```
 
 ### Server Authoritative
@@ -118,7 +108,7 @@ Block Racing
 ├── block-racing-server
 │   └── Dedicated Server
 │
-└── block-racing-shared (Submodule)
+└── block-racing-common (Submodule)
     └── Shared Packets / Snapshots / Enums
 ```
 
@@ -131,12 +121,12 @@ Unity를 기반으로 구현한 게임 클라이언트입니다.
 * Unity 2022.3
 * Network Client
 * Input 처리
-* Snapshot 기반 Rendering
+* Snapshot 기반 Rendering 구조
 * Matchmaking UI
 * Game / Result Scene
 * Game State Rendering
 
-→ **[Block Racing Client Repository](https://github.com/rlawodud89/block-racing-client.git)**
+→ **[Block Racing Client Repository](https://github.com/rlawodud89/block-racing-client)**
 
 ### 🖥️ Server
 
@@ -155,31 +145,31 @@ C# / .NET 기반의 Dedicated Server입니다.
 * Lane Scroll System
 * Game Result
 
-→ **[Block Racing Server Repository](https://github.com/rlawodud89/block-racing-server.git)**
+→ **[Block Racing Server Repository](https://github.com/rlawodud89/block-racing-server)**
 
 ---
 
 ## 📦 Common (Git Submodule)
 
-Client와 Server에서 공통으로 사용하는 데이터는 **별도의 Repository로 분리되어 있으며 Git Submodule로 포함되어 있습니다.**
+Client와 Server에서 공통으로 사용하는 데이터는 별도의 Repository로 분리되어 있으며 Git Submodule로 포함되어 있습니다.
 
 * Packet
 * Snapshot
 * Enum
 * Shared Data Types
 
-이 구조를 통해 다음을 보장합니다:
+이 구조를 통해 다음을 관리합니다:
 
-* Client / Server 간 데이터 구조 완전 일치
-* 버전 불일치로 인한 직렬화 오류 방지
-* 독립적인 Shared Layer 관리
+- Client / Server 간 데이터 구조 일관성 유지
+- Shared Module 버전 명시적 관리
+- 공통 데이터 구조의 독립적인 관리
 
 ```text
 Client ── Submodule ── Shared Module Repo
 Server ── Submodule ── Shared Module Repo
 ```
 
-→ **[Block Racing Common Repository](https://github.com/rlawodud89/block-racing-common.git)**
+→ **[Block Racing Common Repository](https://github.com/rlawodud89/block-racing-common)**
 
 ---
 
@@ -195,11 +185,11 @@ Server ── Submodule ── Shared Module Repo
 ### Server
 
 * C#
-* .NET9
+* .NET 9
 * TCP Socket
 * Dedicated Server Architecture
 
-### Shared Module
+### Common (Shared Module)
 
 * C#
 * Packet Serialization
@@ -210,7 +200,7 @@ Server ── Submodule ── Shared Module Repo
 
 * Git / GitHub
 * Git Submodule
-* Visual Studio
+* Visual Studio 2022
 * Unity
 * Windows
 
@@ -397,8 +387,6 @@ Recovery
 ---
 
 # 🔄 State Synchronization
-
-현재 Client / Server 간 **State Sync 구조를 개발하고 있습니다.**
 
 Server는 게임 상태를 Snapshot 형태로 구성하고 Client에 전달합니다.
 
