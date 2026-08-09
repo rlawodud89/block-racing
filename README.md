@@ -52,8 +52,8 @@ Common은 별도의 Repository로 관리되며, 현재는 **Git Submodule로 Cli
               │ UI / Scene    │   │ RoomManager      │
               └───────┬───────┘   │ GameSimulation   │
                       │           └────────┬─────────┘
-                      │                     │
-                      └──────── TCP ────────┘
+                      │                    │
+                      └──────── TCP ───────┘
 ```
 
 ### Server Authoritative
