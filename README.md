@@ -4,7 +4,9 @@
 >
 > Unity Client와 C# Dedicated Server를 기반으로 구현한 실시간 멀티플레이 게임 프로젝트입니다.
 
-🚧 **현재 개발 진행 중**
+## 📦 Download Block Racing
+
+**[Download Game on itch.io](https://kimjaeyeong0809.itch.io/block-racing)**
 
 ---
 
@@ -29,9 +31,9 @@
 
 # 🏗️ Project Architecture
 
-프로젝트는 **Client / Server / Common**을 각각 독립적인 Repository로 관리합니다.
+프로젝트는 **Client / Server / Test / Common**을 각각 독립적인 Repository로 관리합니다.
 
-Common은 Client와 Server에서 사용하는 Packet, Snapshot, Enum 등의 공통 데이터를 관리하며 **Git Submodule**로 양쪽 프로젝트에 포함되어 있습니다.
+Common은 Client와 Server가 사용하는 Packet, Snapshot, Enum 등의 공통 데이터를 관리하며 Git Submodule로 양쪽 프로젝트에 포함되어 있습니다.
 
 ```text
                          ┌──────────────────────┐
@@ -97,6 +99,7 @@ Client의 입력이나 화면 상태가 게임의 최종 결과를 결정하지 
 | -------------- | ------------------------------------- |
 | 🎮 **Client**  | Unity 기반 게임 Client                    |
 | 🖥️ **Server** | C# / .NET 기반 Dedicated Server         |
+| 🧪 **Test**    | 서버 부하 및 기능 테스트를 위한 Test Client        |
 | 📦 **Common**  | Client / Server 공통 Packet 및 Game Data |
 
 ```text
@@ -110,6 +113,9 @@ Block Racing
 │
 ├── block-racing-server
 │   └── Dedicated Server
+│
+├── block-racing-test
+│   └── Load / Functional Test Client
 │
 └── block-racing-common
     └── Shared Module
@@ -145,6 +151,21 @@ C# / .NET 기반 Dedicated Server입니다.
 
 → **[Block Racing Server Repository](https://github.com/rlawodud89/block-racing-server)**
 
+### 🧪 Test
+
+Block Racing Server를 대상으로 부하 및 기능 테스트를 수행하기 위한 Test Client입니다.
+
+여러 개의 Test Client를 생성하여 실제 Client의 네트워크 요청을 재현하고, 다수의 Client가 동시에 서버에 연결하거나 매칭 및 게임을 진행하는 상황을 테스트합니다.
+
+* Connection Load Test
+* Matchmaking Test
+* Game Load Test
+* Game Play Test
+* Timeout 기반 테스트 결과 확인
+* 다수의 Test Client 동시 실행
+
+→ **[Block Racing Test Repository](https://github.com/rlawodud89/block-racing-test)**
+
 ### 📦 Common
 
 Client와 Server가 공유하는 Network / Game Data 모듈입니다.
@@ -167,6 +188,7 @@ Client와 Server가 공유하는 Network / Game Data 모듈입니다.
 | Client Language  | C#                                      |
 | Server           | .NET 9                                  |
 | Server Language  | C#                                      |
+| Test Client      | C#                                      |
 | Network          | TCP Socket                              |
 | Architecture     | Dedicated Server / Server Authoritative |
 | Shared Module    | Git Submodule                           |
@@ -258,7 +280,7 @@ Room에서는 다음과 같은 게임 흐름을 관리합니다.
 
 ## 4. Fixed Tick Game Simulation
 
-Server는 고정된 Tick을 기준으로 게임 Simulation을 실행합니다.
+Server는 **20 Tick/s (50ms)**의 고정된 Tick을 기준으로 Game Simulation을 실행합니다.
 
 ```text
 Server Game Loop
@@ -280,8 +302,6 @@ GameSimulation
        ├── Lane Scroll
        └── Collision
 ```
-
-현재 Server는 **20 Tick/s (50ms)** 기준으로 Game Simulation을 진행합니다.
 
 이를 통해 Client의 Frame Rate와 관계없이 Server 기준으로 게임 상태를 업데이트합니다.
 
@@ -374,7 +394,7 @@ Heartbeat
 
 # 📚 Detailed Documentation
 
-프로젝트의 세부 구현과 설계 내용은 각 Repository의 README 및 향후 `docs`에서 관리할 예정입니다.
+프로젝트의 세부 구현과 설계 내용은 각 Repository의 README에서 관리합니다.
 
 ### Client
 
@@ -388,6 +408,12 @@ Client Network, State Synchronization, Game State Rendering 등의 구현 내용
 
 Session, Matchmaking, Room, GameSimulation, Snapshot Sync 등의 서버 구조를 확인할 수 있습니다.
 
+### Test
+
+→ **[Test README](https://github.com/rlawodud89/block-racing-test)**
+
+Connection Load, Matchmaking, Game Load, Game Play 테스트 및 Test Client 구조를 확인할 수 있습니다.
+
 ### Common
 
 → **[Common README](https://github.com/rlawodud89/block-racing-common)**
@@ -398,11 +424,7 @@ Packet, Snapshot, Enum 및 Client / Server 간 Shared Contract를 확인할 수 
 
 # 💡 Development Focus
 
-이 프로젝트의 핵심 목표는 단순한 멀티플레이 기능 구현이 아니라,
-
-> **실시간 멀티플레이 환경에서 일관된 게임 상태를 유지할 수 있는 서버 구조를 직접 설계하고 구현하는 것**
-
-입니다.
+이 프로젝트는 **실시간 멀티플레이 환경에서 일관된 게임 상태를 유지할 수 있는 서버 구조**를 중심으로 설계하고 구현했습니다.
 
 주요 개발 관심사는 다음과 같습니다.
 
@@ -417,25 +439,4 @@ Packet, Snapshot, Enum 및 Client / Server 간 Shared Contract를 확인할 수 
 * **Multiplayer Error Handling**
 * **Logging & Performance Analysis**
 
-Client → Server로 입력을 전달하고, Server → Client로 확정된 게임 상태를 전달하는 구조를 통해 **Network / Game Logic / Rendering의 책임을 분리**하는 것을 목표로 개발하고 있습니다.
-
----
-
-# 🚧 Development Status
-
-현재 다음 기능을 중심으로 개발 및 테스트를 진행하고 있습니다.
-
-* [x] TCP Client / Server 통신
-* [x] Login / Session
-* [x] Matchmaking
-* [x] Room Management
-* [x] Server Authoritative Game Simulation
-* [x] Block / Attack System
-* [x] Line Clear
-* [x] Lane Scroll
-* [x] Collision / Stun
-* [x] Snapshot State Synchronization
-* [x] Heartbeat / Disconnect Handling
-* [ ] Performance Optimization
-* [ ] Concurrency / Stress Test 고도화
-* [ ] Deployment / 운영 환경 검증
+Client → Server로 입력을 전달하고, Server → Client로 확정된 게임 상태를 전달하는 구조를 통해 **Network / Game Logic / Rendering의 책임을 분리**했습니다.
