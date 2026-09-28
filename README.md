@@ -280,7 +280,7 @@ Room에서는 다음과 같은 게임 흐름을 관리합니다.
 
 ## 4. Fixed Tick Game Simulation
 
-Server는 **20 Tick/s (50ms)**의 고정된 Tick을 기준으로 Game Simulation을 실행합니다.
+Server는 **20 Tick/s (50ms)** 의 고정된 Tick을 기준으로 Game Simulation을 실행합니다.
 
 ```text
 Server Game Loop
